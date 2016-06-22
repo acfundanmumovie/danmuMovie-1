@@ -1,0 +1,25 @@
+
+//说明:Mac系统请先设置文本的-系统偏好设置里，取消掉"智能引号"，否则智能引号会在修改参数的时候自动将引号改为中文引号，引起参数传递失败
+
+
+			show = "l";//弹幕进入方向,l为左，r为右
+			 expressionScale = 0.8;//表情缩放
+			 maxSize = 50;//字体大小
+			
+			 speed1 = 0.7;//普通弹幕速度
+			 speed2 = 0.9;//测试弹幕速度
+			 offY = 0;//弹幕显示区域Y坐标
+			 screen =0;//屏幕ID
+			 bgColoruint = 0x000000;//背景颜色
+			 bgVisible =true;//背景是否透明
+			 textOrder =false;//字体是否反转显示
+			 showInDanMu = false;//是否显示预制弹幕
+			 topShow = false;//是否顶部先显示弹幕
+			 localGif = true;//是否使用内置表情包
+			 addBgJpg = false;//是否添加背景图片
+			 bgJpgUrl = null;//背景图片url
+			 setZ = 0;//设置单条弹幕Z坐标
+			 addRectWidth = 0;//增加弹幕显示区域宽度
+			 addRectHeight = 0;//增加弹幕显示区域高度
+			playScreen =false //是否是游戏屏,游戏屏只显示表情，不飘弹幕，慎用
+			valueAbs=100  //双方点赞数的最大差值
