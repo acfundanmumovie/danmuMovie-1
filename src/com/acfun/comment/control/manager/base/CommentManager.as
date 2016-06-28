@@ -298,7 +298,7 @@ package com.acfun.comment.control.manager.base
 					var dmLines:int = Math.floor(_getStageHeight/mm.height)
 					if(_dmCount> dmLines*2)
 					{
-						//trace("add 3D_Z")
+						//trace("add 3D_Z:"+ConstValue.SINGALDANMU_Z)
 						
 						mm.z = Math.random()* ConstValue.SINGALDANMU_Z;
 					}

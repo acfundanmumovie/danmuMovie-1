@@ -15,6 +15,7 @@
 	import com.acfun.comment.entity.SingleCommentData;
 	import com.acfun.comment.interfaces.ICommentPlugin;
 	import com.acfun.comment.utils.CommentUtils;
+	import com.acfun.net.PtoP;
 	import com.acfun.net.analysis.AnalysisUtil;
 	import com.acfun.net.analysis.errors.ACError;
 	import com.acfun.net.analysis.errors.ErrorType;
@@ -127,6 +128,8 @@
 		//offY=50 弹幕显示位置偏移
 		//textOrder 文字是否反转
 		//showInDanMu 是否显示内置弹幕//内置弹幕有屏幕最多显示弹幕条数限制
+		//http://help.adobe.com/zh_CN/FlashPlatform/reference/actionscript/3/package-summary.html //在线文档
+		
 		public function DanmuMovie()
 		{
 			stage.nativeWindow.activate();//至于最上一级;
@@ -137,6 +140,7 @@
 			//flash.system.Security.allowInsecureDomain("*");
 			//var testSprite:Sprite = new Sprite()
 			//TweenLite.to(testSprite,0.1,{alpha:0,delay:2,onComplete:function(){trace("showStart")}});
+			
 			msBox.visible = false;
 			addEventListener(Event.ENTER_FRAME,onStage);
 			//resetEage()
@@ -154,6 +158,7 @@
 			msBox.jdLine.bar.x = msBox.jdLine.jdRed.width - msBox.jdLine.bar.width;
 			if(msBox.jdLine.bar.x<=0)msBox.jdLine.bar.x=0;
 		}*/
+		
 		
 		private function makeCursorImages():Vector.<BitmapData>
 		{
@@ -201,6 +206,10 @@
 			{
 				//trace("--A")
 				trace("--screenResolutionX:"+flash.system.Capabilities.screenResolutionX+";screenResolutionY:"+flash.system.Capabilities.screenResolutionY);//用户设备的水平分辨率
+				//////////////////////
+				var _ptop:PtoP =new PtoP()
+				_ptop.addEventListener(PtoP.MESSAGE,ptopMessageHandle)
+				//////////////////////
 				
 				stage.addEventListener(Event.RESIZE,onResize);
 				removeEventListener(Event.ENTER_FRAME,onStage);
@@ -210,6 +219,7 @@
 				stage.frameRate = 24;
 				
 				videoScreen();//全屏
+				
 			}
 			
 			//getPcId();
@@ -220,6 +230,13 @@
 			_URLld.addEventListener(IOErrorEvent.IO_ERROR,jsonIO_ERROR);
 			_URLld.addEventListener(SecurityErrorEvent.SECURITY_ERROR,errorHandler);
 			//////////////////////////
+		}
+		
+		private function ptopMessageHandle(e:Event):void
+		{
+			trace("messageType:"+e.type+";state:"+e.currentTarget._viewState)
+			var getViewState:int = e.currentTarget._viewState;//获取p2p操控显示
+			setView(getViewState)
 		}
 		
 		private function getPcId():void 
@@ -351,6 +368,8 @@
 				//CommentHandler._onSignal.add(onSignalHandler)//_onSignall.add(onSignalHandler);
 				///////////////////////////
 				this.setChildIndex(msBox,this.numChildren-1);
+				
+				////////////////
 				
 		}
 		
@@ -602,6 +621,13 @@
 			}
 			
 			////////////////播本地视频还是网络视频
+			playLoaclVideos();
+			////////////////
+			
+		}
+		
+		private function playLoaclVideos():void
+		{
 			_player._playLocalVideo = _playLocalVideo;
 			if(_playLocalVideo)//播放本地视频
 			{
@@ -614,46 +640,67 @@
 			{
 				_player.start(CommentHandler.instance.source.toString());
 			}
-			////////////////
-			
 		}
 		
 		public function changeView():void{
-			Log.info("改变状态：",CommentHandler.instance.player_status);
-			trace("---status:"+CommentHandler.instance.player_status)
-			//if(!_playLocalVideo)//后台发送videoUrl
-			//{
-				if(CommentHandler.instance.player_status == 0){//关闭
-					_commentLayer.visible = false;
-					_playerLayer.visible = false;
-					logoMiddle.visible = true;
-					if(_player){
-						_player.isShow(false);
-					}
-				}else if(CommentHandler.instance.player_status == 1){//显示视频
-					_commentLayer.visible = true;
-					_playerLayer.visible = true;
-					logoMiddle.visible = false;
-					if(_player){
-						_player.isShow(true);
-					}
-				}else{//显示弹幕
-					_commentLayer.visible = true;
-					_playerLayer.visible = false;
-					logoMiddle.visible = true;
-					if(_player){
-						_player.isShow(false);
+			//Log.info("改变状态：",CommentHandler.instance.player_status);
+			//trace("---status:"+CommentHandler.instance.player_status)
+			
+			var currentViewId:uint = CommentHandler.instance.player_status;
+			setView(currentViewId)
+		}
+		
+		public function setView(viewId:uint=1):void//
+		{
+			if(viewId == 0){//关闭
+				_commentLayer.visible = false;//弹幕层
+				_playerLayer.visible = false;//播放器
+				logoMiddle.visible = true;//背景层
+				if(_player){
+					_player.isShow(false);
+				}
+			}else if(viewId == 1){//显示视频和弹幕
+				_commentLayer.visible = true;
+				_playerLayer.visible = true;
+				logoMiddle.visible = false;
+				if(_player){
+					_player.isShow(true);
+				}
+			}else if(viewId == 2){//显示弹幕
+				_commentLayer.visible = true;
+				_playerLayer.visible = false;
+				logoMiddle.visible = true;
+				if(_player){
+					_player.isShow(false);
+				}
+			}else if(viewId == 3){//显示摄像头和弹幕
+				_commentLayer.visible = true;
+				_playerLayer.visible = true;
+				logoMiddle.visible = false;
+				if(_player){
+					_player.isShow(true);
+					_player.locolVideo(stage.stageWidth,stage.stageHeight)
+				}
+			}else if(viewId == 4){//显示直播和弹幕
+				_commentLayer.visible = true;
+				_playerLayer.visible = true;
+				logoMiddle.visible = false;
+				if(_player){
+					_player.isShow(true);
+					if(_liveServer!=null && _liveStream!=null)
+					{
+						_player.livePlay(_liveServer,_liveStream)
 					}
 				}
-			//}
-			//else//播放本地视频
-			//{
-			//	_commentLayer.visible = true;
-			//	_playerLayer.visible = true;
-			//	if(_player){
-			//		_player.isShow(true);
-			//	}
-			//}
+			}else if(viewId == 5){//显示点播和弹幕
+				_commentLayer.visible = true;
+				_playerLayer.visible = true;
+				logoMiddle.visible = false;
+				if(_player){
+					_player.isShow(true);
+					playLoaclVideos();
+				}
+			}
 		}
 		
 		private function onPlayStatus(event:PlayerCoreStatusEvent):void
@@ -779,6 +826,12 @@
 			if (_comment)
 				_comment.resize(dmRectWidth,dmRectHeight);
 			Mouse.hide();
+			///////////////
+			/*ggTxt.width = stage.stageWidth * .8;
+			ggTxt.scaleY = ggTxt.scaleX;
+			ggTxt.x = (stage.stageWidth-ggTxt.width)* .5;
+			ggTxt.y = (stage.stageHeight-ggTxt.height)* .5;
+			this.setChildIndex(ggTxt,this.numChildren-1)*/
 		}
 	}
 }

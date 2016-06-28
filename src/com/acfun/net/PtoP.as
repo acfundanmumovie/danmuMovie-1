@@ -1,16 +1,21 @@
 ﻿package  com.acfun.net
 {
-	import flash.display.MovieClip;
-	import flash.events.*;
-	import flash.net.*;
+	import flash.events.Event;
+	import flash.events.EventDispatcher;
+	import flash.events.NetStatusEvent;
+	import flash.net.GroupSpecifier;
+	import flash.net.NetConnection;
+	import flash.net.NetGroup;
 	
-	public class PtoP extends MovieClip 
+	public class PtoP extends EventDispatcher 
 	{
 		private var nc:NetConnection;
         private var group:NetGroup;
-		public static var localNet:Boolean = false;
+		public static var _localNet:Boolean = false;
 		private var _connectGroupSuccess:Boolean = false;
         //private var userName:String;
+		public static var MESSAGE:String = "message"
+		public var _viewState:uint = 1;//输出屏幕窗口显示状态
 		
 		public function PtoP() 
 		{
@@ -29,7 +34,7 @@
             {
                 nc=new NetConnection();
                 nc.addEventListener(NetStatusEvent.NET_STATUS, netStatus);
-				if(localNet)
+				if(_localNet)
 				{
 					nc.connect("rtmfp:");//rtmfp://p2p.rtmfp.net/7143ea177792d3f6b95f0006-3b233c02b7da/
 				}
@@ -43,7 +48,7 @@
 
             private function netStatus(event:NetStatusEvent):void
             {
-                writeText(event.info.code);
+                //writeText(event.info.code);
 				trace(event.info.code)
                 switch (event.info.code)
                 {
@@ -52,16 +57,19 @@
                         break;
 
                     case "NetGroup.Connect.Success":
-						_connectGroupSuccess = true;
-					   onNetGroupConnect();
+						//这里发送消息不会被组员接收到
+						
                         break;
 
                     case "NetGroup.Posting.Notify"://可以理解为有新消息，接收消息
                         receiveMessage(event.info.message)//此处广播推送消息此方法必须为public
+						dispatchEvent(new Event(PtoP.MESSAGE))
                         break;
 						
 					case "NetGroup.Neighbor.Connect":
                        trace("join:"+event.info.peerID+";"+event.info.name)
+					   _connectGroupSuccess = true;//这里发送消息k可以被组员接收到
+					  // onNetGroupConnect();
                         break;
 						
 					case "NetGroup.Neighbor.Disconnect":
@@ -76,7 +84,7 @@
 
             private function setupGroup():void
             {
-                var groupspec:GroupSpecifier=new GroupSpecifier("myGroup/groupOne1");//多个文件此处必须唯一，相当于通信的name
+                var groupspec:GroupSpecifier=new GroupSpecifier("myGroup/acfunGroupOne");//多个文件此处必须唯一，相当于通信的name
                 groupspec.postingEnabled=true;
 				groupspec.serverChannelEnabled = true;//启用组内成员通讯功能
                 groupspec.ipMulticastMemberUpdatesEnabled=true;
@@ -87,24 +95,20 @@
                 group.addEventListener(NetStatusEvent.NET_STATUS, netStatus);
             }
 			
+			
 			private function onNetGroupConnect():void
 			{
-				//doPost()
-			}
-			
-			private function doPost():void
-			{
-				trace("执行发送")
-				/*var msg:Object = new Object();
-				msg.text = "hello everyone"
-				msg.sender = nc.nearID;
-				group.post(msg)*/
-				sendMessage("hello")
+				/*trace("首次执行发送")
+				var msg:Object = new Object();
+				msg.msg = "hello everyone"
+				msg.userMessageId = nc.nearID;
+				sendMessage(msg)*/
 			}
 			
 			//发送消息
             public function sendMessage(getServerobject:Object =null):void
             {
+				trace("sendMessage")
                 var message:Object=getServerobject;
                
                 //message.sender=group.convertPeerIDToGroupAddress(nc.nearID);//转换nearID的形式，暂时没什么用
@@ -113,6 +117,7 @@
 				
 				if(_connectGroupSuccess)
 				{
+					//trace("__Asend")
                 	group.post(message);//发送消息
 					//此方法使用 info.code 属性中的 "NetGroup.Posting.Notify" 将 NetStatusEvent 发送到 NetGroup 的事件侦听器。
 					//"NetGroup.Posting.Notify" 事件被调度到客户端和服务器上的 NetGroup。
@@ -124,8 +129,12 @@
 			//接收消息
             public function receiveMessage(message:Object):void
             {
-				//trace("收到")
-               // writeText(message.userMessageId + ": " + message.msg);
+				if(message.msg && message.type =="viewState"){
+					trace("收到并输出消息:"+message.msg)
+					_viewState = message.msg
+				}
+				
+                writeText(message.userMessageId + ": " + message.msg);
             }
 			
 			//打印消息

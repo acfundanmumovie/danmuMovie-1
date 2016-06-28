@@ -117,9 +117,9 @@
 			_dataWh = data.width/data.height;
 			/////////////
 			_duration = data.duration;
-			//var seekNum:Number = uint(_duration -10)
-			//trace("seek视频总时长："+_duration)
-			//nets.seek(seekNum);//测试
+			/*var seekNum:Number = uint(_duration -10)
+			trace("seek视频总时长："+_duration)
+			nets.seek(seekNum);*///测试
 			
 			var max:int = maxNum(data.width,data.height);
 			videoWidth = data.width/max;
@@ -191,33 +191,44 @@
 				case "NetStream.Play.Stop":
 				{					
 					////////////////////////
-					if(_playLocalVideo)
-					{
-						//nets.seek(0);//循环播
-						currentPlayId++;
-						if(currentPlayId ==_localVideos.length) 
-						{
-							currentPlayId=0;
-						}
-						
-						if(video) video.clear()
-						
-						if(_localVideos[currentPlayId].type =="click"){
-							trace("--currentPlayId:"+currentPlayId+";"+"__currentVideoUrl:"+_localVideos[currentPlayId].url)
-							nets.play(_localVideos[currentPlayId].url);
-						}
-					}
-					else//后台操控
-					{
-						//notify(SIGNALCONST.VIDEO_END);
-						this.dispatchEvent(new PlayerCoreStatusEvent(PlayerCoreStatusEvent.LISTEN_TYPE,PlayerCoreStatusEvent.PLAYERCORE_MEDIA_END));
-					}
+					completeVideoDeal()
 					break;
 				}
 				case "NetStream.Play.StreamNotFound":
+				{
+					//trace("--getStreamNotFound")
+					completeVideoDeal()
+					break;
+				}
 				default:
 					Log.warn("DayinVideo:",e.info.code);
 					break;
+			}
+		}
+		
+		///////////////////////当前视频播放完成或异常chuli
+		private function completeVideoDeal():void
+		{
+			if(_playLocalVideo)
+			{
+				//nets.seek(0);//循环播
+				currentPlayId++;
+				if(currentPlayId ==_localVideos.length) 
+				{
+					currentPlayId=0;
+				}
+				
+				if(video) video.clear()
+				
+				if(_localVideos[currentPlayId].type =="click"){
+					//trace("--currentPlayId:"+currentPlayId+";"+"__currentVideoUrl:"+_localVideos[currentPlayId].url)
+					nets.play(_localVideos[currentPlayId].url);
+				}
+			}
+			else//后台操控
+			{
+				//notify(SIGNALCONST.VIDEO_END);
+				this.dispatchEvent(new PlayerCoreStatusEvent(PlayerCoreStatusEvent.LISTEN_TYPE,PlayerCoreStatusEvent.PLAYERCORE_MEDIA_END));
 			}
 		}
 		
@@ -239,11 +250,14 @@
 				cam.setQuality(bt,camQuality);
 			}		
 			
-			_vid2=new Video(camWidth_,camHeight_);
+			/*_vid2=new Video(camWidth_,camHeight_);
 			_vid2.attachCamera(cam);
 			_vid2.scaleX=-1;
 			_vid2.x=camWidth_;
-			addChild(_vid2);
+			addChild(_vid2);*/
+			video=new Video(camWidth_,camHeight_);
+			video.attachCamera(cam);
+			addChild(video);
 		}
 		
 		////////////////////////////////////
@@ -289,15 +303,19 @@
 		
 		private function geterror(e:IOErrorEvent):void{
 			trace(e);
+			completeVideoDeal()
 		}
 		
 		private function onMete(e:AsyncErrorEvent):void{
 			trace(e);
+			completeVideoDeal()
 		}
 		
 		//////////////////////////////////直播
 		public function livePlay(fuq:String=null,livePlayUrl:String=null):void
 		{
+			//var str:String ="rtmp://103.244.233.164:1935/live/news"
+			//trace(str.slice(str.lastIndexOf("/")+1))
 			_livePlayUrl = livePlayUrl;
 			_nc = new NetConnection()
 			_nc.connect(fuq);

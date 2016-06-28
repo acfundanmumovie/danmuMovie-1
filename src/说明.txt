@@ -23,3 +23,7 @@
 			 addRectHeight = 0;//增加弹幕显示区域高度
 			playScreen =false //是否是游戏屏,游戏屏只显示表情，不飘弹幕，慎用
 			valueAbs=100  //双方点赞数的最大差值
+			 "camera":false,//是否开启摄像头
+   			 "livePlayer":false,//是否开启直播
+   			 "liveServer":null,//直播服务器地址
+   			 "liveStream":null//直播流名称  ;当同时打开摄像头，直播和点播循环;显示优先级一次为：摄像头，直播，点播循环

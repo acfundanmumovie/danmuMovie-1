@@ -99,8 +99,7 @@
 			
 		public function CommentHandler()
 		{
-//			Security.loadPolicyFile("xmlsocket://cj.aixifan.com:843");
-//			Security.loadPolicyFile("http://cj.aixifan.com:843");
+//			
 			Security.loadPolicyFile("xmlsocket://dm.aixifan.com:843");//主动请求安全文件
 			// 这里暂时不初始化WebSocket			
 //			keywordsFilter = KeywordsFilter.Instance;
@@ -110,7 +109,7 @@
 			lastCheckTime = new Date().time;
 			/////////
 			_onSignal=new Signal(String);
-		//_ptop = new PtoP();
+			//_ptop = new PtoP();
 		}
 		
 		public static function get instance():CommentHandler
@@ -135,6 +134,7 @@
 				websocket.close(false);
 			}
 			var conn:String = "ws://dm.aixifan.com/ws/player";//ws://cj.aixifan.com/ws/player
+			//var conn:String = "ws://10.3.0.118:9090";
 //			Log.debug("连接到评论服务器：" , conn);
 			websocket = new WebSocket(conn,'*',null,connectwait);			
 			websocket.debug = false;
@@ -629,7 +629,7 @@
 		 */		
 		private function handlePong(e:WebSocketEvent):void
 		{
-			trace("--收到心跳检测")
+			//trace("--收到心跳检测")
 			checkSendStack();
 			clearTimeout(checkConnectionTimeOut);
 			droppedConnectionCount = 0;
@@ -644,6 +644,7 @@
 		 */			
 		private function handleWebSocketOpen(e:WebSocketEvent):void
 		{
+			trace("--socketOpen")
 			Log.debug("WS已经打开");
 			clearTimeout(checkConnectionTimeOut);
 			droppedConnectionCount = 0;
@@ -709,6 +710,7 @@
 		 */		
 		private function handleWebSocketMessage(e:WebSocketEvent):void
 		{
+			trace("getTest:"+e.message.utf8Data)
 			if(e.message && e.message.type == WebSocketMessage.TYPE_UTF8)
 			{
 				//预处理
