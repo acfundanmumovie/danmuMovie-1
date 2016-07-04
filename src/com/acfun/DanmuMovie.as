@@ -155,7 +155,7 @@
 			mouseCursor.data = makeCursorImages();
 			Mouse.registerCursor("spinningArrow",mouseCursor);
 			Mouse.cursor = "spinningArrow";
-			TweenMax.to(this,0,{});
+			TweenMax.to(this,0,{});//
 		}
 		
 		/*private function resetEage(boxScaleX:Number=.5):void
