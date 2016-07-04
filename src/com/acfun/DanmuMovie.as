@@ -42,12 +42,17 @@
 	import flash.net.URLLoader;
 	import flash.net.URLRequest;
 	import flash.system.Capabilities;
+	import flash.text.TextField;
+	import flash.text.TextFieldAutoSize;
+	import flash.text.TextFieldType;
 	import flash.text.TextFormat;
 	import flash.ui.ContextMenu;
 	import flash.ui.ContextMenuItem;
 	import flash.ui.Mouse;
 	import flash.ui.MouseCursorData;
 	import flash.utils.Timer;
+	import flash.utils.setTimeout;
+	import flash.utils.clearTimeout;
 	
 	//[SWF(width="800",height="600",frameRate="24",backgroundColor="#000000")]
 //	[SWF(width="800",height="600",frameRate="24",backgroundColor="#5DD452")]
@@ -109,7 +114,9 @@
 		private var _openCamera:Boolean = false;//是否启动本地摄像头
 		private var _livePlayer:Boolean = false;//是否开启直播播放器
 		private var _liveServer:String = null;//直播服务器
-		private var _liveStream:String = null;//直播流  
+		private var _liveStream:String = null;//直播流 
+		private var _flightText:TextField;//发光字
+		private var _interClearOut:uint;
 		
 		//后台:http://dm.aixifan.com/admin
         //账号 密码 :admin、acfundanmuyingyuan
@@ -206,10 +213,6 @@
 			{
 				//trace("--A")
 				trace("--screenResolutionX:"+flash.system.Capabilities.screenResolutionX+";screenResolutionY:"+flash.system.Capabilities.screenResolutionY);//用户设备的水平分辨率
-				//////////////////////
-				var _ptop:PtoP =new PtoP()
-				_ptop.addEventListener(PtoP.MESSAGE,ptopMessageHandle)
-				//////////////////////
 				
 				stage.addEventListener(Event.RESIZE,onResize);
 				removeEventListener(Event.ENTER_FRAME,onStage);
@@ -219,7 +222,6 @@
 				stage.frameRate = 24;
 				
 				videoScreen();//全屏
-				
 			}
 			
 			//getPcId();
@@ -230,13 +232,16 @@
 			_URLld.addEventListener(IOErrorEvent.IO_ERROR,jsonIO_ERROR);
 			_URLld.addEventListener(SecurityErrorEvent.SECURITY_ERROR,errorHandler);
 			//////////////////////////
+		
 		}
 		
 		private function ptopMessageHandle(e:Event):void
 		{
-			trace("messageType:"+e.type+";state:"+e.currentTarget._viewState)
-			var getViewState:int = e.currentTarget._viewState;//获取p2p操控显示
-			setView(getViewState)
+			trace("messageType:"+e.type+";state:"+e.currentTarget._viewState+";"+e.currentTarget._getOrderScreen)
+			if(e.currentTarget._getOrderScreen =="all" || e.currentTarget._getOrderScreen == ConstValue.SCREEN){
+				var getViewState:int = e.currentTarget._viewState;//获取p2p操控显示
+				setView(getViewState)
+			}
 		}
 		
 		private function getPcId():void 
@@ -265,7 +270,7 @@
         }
 		
 		////////////////////////////
-		private function setWindow(getShow:String="l",getMaxSize:Number=50,getExpressionScale:Number=0.8,getSpeed1:Number=0.7,getSpeed2:Number=0.9,getOffY:Number=0,getScreen:Number=2,getBgColor:uint=0x000000,getBgVisible:Boolean=false,getTextOrder:Boolean=false,getInDanMu:Boolean=false,getTopShow:Boolean=false,getLocalGif:Boolean=true,getAddBgJpg:Boolean=false,getBgJpgUrl:String=null,getZ:Number=0,getRectWidth:Number=0,getRectHeight:Number=0,getMyJson:Boolean=false):void
+		private function setWindow(getShow:String="l",getMaxSize:Number=50,getExpressionScale:Number=0.8,getSpeed1:Number=0.7,getSpeed2:Number=0.9,getOffY:Number=0,getScreen:Number=1,getBgColor:uint=0x000000,getBgVisible:Boolean=false,getTextOrder:Boolean=false,getInDanMu:Boolean=false,getTopShow:Boolean=false,getLocalGif:Boolean=true,getAddBgJpg:Boolean=false,getBgJpgUrl:String=null,getZ:Number=0,getRectWidth:Number=0,getRectHeight:Number=0,getMyJson:Boolean=false):void
 		{
 			//trace("getBgColor:"+getBgColor)
 			if(getBgVisible)
@@ -285,10 +290,9 @@
 					this.heightPercent = param.heightPercent;
 				}*/
 				
-			
-			ConstValue.SCREEN = getScreen;
 			//trace("--CommentConfig.instance.speede:"+CommentConfig.instance.speede+";CommentConfig.instance.speede2:"+CommentConfig.instance.speede2)
 			if(getMyJson){//SINGALDANMUZ  getZ
+					ConstValue.SCREEN = getScreen;
 					
 					ConstValue.SINGALDANMU_Z = getZ;
 				
@@ -354,6 +358,13 @@
 				stage.addEventListener(MouseEvent.CLICK,click);
 				Mouse.hide();
 				
+				//////////////////////
+				var _ptop:PtoP =new PtoP()
+				_ptop.addEventListener(PtoP.MESSAGE,ptopMessageHandle)
+					
+				CommentHandler._onSignal.add(onSignalHandler);
+				//onSignalHandler("")
+				//////////////////////
 				onResize();	
 				
 				var timer1:Timer = new Timer(1500);
@@ -364,18 +375,14 @@
 				my_cm.hideBuiltInItems();
 				var menuItem_cmi:ContextMenuItem = new ContextMenuItem(VERSION,false);
 				my_cm.customItems =[];
-				///////////////
-				//CommentHandler._onSignal.add(onSignalHandler)//_onSignall.add(onSignalHandler);
-				///////////////////////////
+
 				this.setChildIndex(msBox,this.numChildren-1);
-				
-				////////////////
 				
 		}
 		
 		///////////////
-		//private function onSignalHandler(info:String):void
-		//{
+		private function onSignalHandler(info:String):void
+		{
 			//trace("--info:"+info)
 		
 			//if(info=='LIANMENG'){
@@ -410,7 +417,40 @@
 			//	msBox.msMiddleBox.play();
 			//	dmReset0()
 			//}
-		//}
+			///////////////////////
+			
+			if(info=='FLIGHTTEXT')
+			{
+				//if(CommentHandler.instance._flightTxtOrder ==0)//开
+				//{
+					if(_interClearOut){
+						clearTimeout(_interClearOut)
+					}
+					//trace("__CommentHandler.instance._flighTxtColor:"+CommentHandler.instance._flighTxtColor)
+					_flightText = FlightTxt(CommentHandler.instance._flighTxtColor,CommentHandler.instance._flighTxtStr);
+					if(ggTxt.ligntBox.numChildren >0) ggTxt.ligntBox.removeChildAt(0) 
+					ggTxt.ligntBox.addChild(_flightText)
+					ggTxt.gotoAndStop(25)
+					resetFlightBox()
+					ggTxt.gotoAndPlay(1)
+					ggTxt.visible =true;
+					_interClearOut =setTimeout(endFlightTxt, 8000);
+				//}
+				//else if(CommentHandler.instance._flightTxtOrder ==1)//关
+				//{
+					//ggTxt.visible =false;
+					//ggTxt.stop()
+				//}
+			}
+		}
+		
+		private function endFlightTxt():void
+		{
+			//trace("__endFlightTxt")
+			ggTxt.visible =false;
+			ggTxt.stop()
+			//clearTimeout(_interClearOut)
+		}
 		//
 		//private function dmReset0():void
 		//{
@@ -693,12 +733,13 @@
 					}
 				}
 			}else if(viewId == 5){//显示点播和弹幕
+				playLoaclVideos();
 				_commentLayer.visible = true;
 				_playerLayer.visible = true;
 				logoMiddle.visible = false;
 				if(_player){
 					_player.isShow(true);
-					playLoaclVideos();
+					//playLoaclVideos();
 				}
 			}
 		}
@@ -827,11 +868,40 @@
 				_comment.resize(dmRectWidth,dmRectHeight);
 			Mouse.hide();
 			///////////////
-			/*ggTxt.width = stage.stageWidth * .8;
-			ggTxt.scaleY = ggTxt.scaleX;
-			ggTxt.x = (stage.stageWidth-ggTxt.width)* .5;
-			ggTxt.y = (stage.stageHeight-ggTxt.height)* .5;
-			this.setChildIndex(ggTxt,this.numChildren-1)*/
+			
+		}
+		
+		//发光字
+		private function FlightTxt(color:Object=0xffffff,str:String="哎呦不错哦耶耶耶",font:String="微软雅黑",size:uint=260):TextField
+		{
+			var debText:TextField = new TextField();
+			//debText.maxChars =3
+			debText.selectable = false;
+			debText.mouseEnabled = false;
+			debText.multiline = false;
+			debText.type = TextFieldType.DYNAMIC;
+			debText.autoSize = TextFieldAutoSize.LEFT;
+			var debTextFormat:TextFormat = new TextFormat(font,size,color,true);
+			debTextFormat.letterSpacing =50;
+			debText.defaultTextFormat = debTextFormat;
+			if(str.length>5) str = str.slice(0,5)
+			debText.text = str;
+			//debText.filters = filter;
+			debText.x = -debText.width*.5;
+			debText.y = -debText.height*.5;
+			return debText;
+		}
+		
+		//重置发光字显示
+		private function resetFlightBox():void
+		{
+			if(ggTxt.width > stage.stageWidth * .6){
+				ggTxt.width = stage.stageWidth * .6;
+				ggTxt.scaleY = ggTxt.scaleX;
+			}
+			ggTxt.x = stage.stageWidth* .5;
+			ggTxt.y = stage.stageHeight-ggTxt.height*.6;
+			this.setChildIndex(ggTxt,this.numChildren-1)
 		}
 	}
 }

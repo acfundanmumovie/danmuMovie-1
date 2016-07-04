@@ -89,6 +89,9 @@
 		
 		///////////////
 		public static var _onSignal:Signal;//广播事件，通知特殊弹幕点击数
+		//public var _flightTxtOrder:int = 1;//是否显示发光字
+		public var _flighTxtColor:String ="0xffffff";//发光字颜色
+		public var _flighTxtStr:String = "哎呦不错哦";//发光字 
 		//private var _ptop:PtoP;
 		
 		//临时措施：同时往旧版弹幕服发一次
@@ -710,7 +713,7 @@
 		 */		
 		private function handleWebSocketMessage(e:WebSocketEvent):void
 		{
-			trace("getTest:"+e.message.utf8Data)
+			//trace("getTest:"+e.message.utf8Data)
 			if(e.message && e.message.type == WebSocketMessage.TYPE_UTF8)
 			{
 				//预处理
@@ -730,6 +733,14 @@
 							case "playerStatus":
 								player_status = serverResponse.data;
 								notify(SIGNALCONST.CHANGE_VIEW);
+								break;
+							case "bling"://发光字
+								//trace("--flightTxtOrder:"+serverResponse.data.color)
+								//_flightTxtOrder = serverResponse.data;
+								//var getFlightTxtColor:String = 
+								_flighTxtColor = "0x"+serverResponse.data.color.slice(1);
+								_flighTxtStr = serverResponse.data.msg;
+								_onSignal.dispatch('FLIGHTTEXT');
 								break;
 							case "expression"://发送表情弹幕
 								

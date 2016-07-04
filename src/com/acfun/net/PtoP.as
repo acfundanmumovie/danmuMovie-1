@@ -1,5 +1,7 @@
 ﻿package  com.acfun.net
 {
+	import com.acfun.External.ConstValue;
+	
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	import flash.events.NetStatusEvent;
@@ -16,6 +18,7 @@
         //private var userName:String;
 		public static var MESSAGE:String = "message"
 		public var _viewState:uint = 1;//输出屏幕窗口显示状态
+		public var _getOrderScreen:String = "all";//p2p对哪一块屏幕发送指令
 		
 		public function PtoP() 
 		{
@@ -63,13 +66,15 @@
 
                     case "NetGroup.Posting.Notify"://可以理解为有新消息，接收消息
                         receiveMessage(event.info.message)//此处广播推送消息此方法必须为public
-						dispatchEvent(new Event(PtoP.MESSAGE))
+						if(event.info.message.type != "tellYouWhoIam"){
+							dispatchEvent(new Event(PtoP.MESSAGE))
+						}
                         break;
 						
 					case "NetGroup.Neighbor.Connect":
                        trace("join:"+event.info.peerID+";"+event.info.name)
 					   _connectGroupSuccess = true;//这里发送消息k可以被组员接收到
-					  // onNetGroupConnect();
+					  	onNetGroupConnect();//汇报身份
                         break;
 						
 					case "NetGroup.Neighbor.Disconnect":
@@ -98,11 +103,11 @@
 			
 			private function onNetGroupConnect():void
 			{
-				/*trace("首次执行发送")
+				trace("首次执行p2p发送汇报身份")
 				var msg:Object = new Object();
-				msg.msg = "hello everyone"
-				msg.userMessageId = nc.nearID;
-				sendMessage(msg)*/
+				msg.msg = ConstValue.SCREEN;
+				msg.type = "tellYouWhoIam";
+				sendMessage(msg)
 			}
 			
 			//发送消息
@@ -132,9 +137,13 @@
 				if(message.msg && message.type =="viewState"){
 					trace("收到并输出消息:"+message.msg)
 					_viewState = message.msg
+				}//
+				
+				if(message.screen){
+					_getOrderScreen = message.screen;
 				}
 				
-                writeText(message.userMessageId + ": " + message.msg);
+                writeText(message.userMessageId + "发送接收:" + message.msg);
             }
 			
 			//打印消息

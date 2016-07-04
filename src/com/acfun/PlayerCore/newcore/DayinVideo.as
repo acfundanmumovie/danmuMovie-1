@@ -50,6 +50,7 @@
 		}
 		
 		public function start(source:String=null):void{	
+			resetVideo()
 			_inited = false;
 			netc = new NetConnection();
 			netc.connect(null);
@@ -235,6 +236,7 @@
 		///////////////////////////////////开启显示本地摄像头
 		public function locolVideo(camWidth_:Number=1024,camHeight_:Number=768):void{
 			trace("添加本地摄像头")
+			resetVideo()
 			cam =Camera.getCamera();
 			
 			if(cam){
@@ -316,6 +318,7 @@
 		{
 			//var str:String ="rtmp://103.244.233.164:1935/live/news"
 			//trace(str.slice(str.lastIndexOf("/")+1))
+			resetVideo()
 			_livePlayUrl = livePlayUrl;
 			_nc = new NetConnection()
 			_nc.connect(fuq);
@@ -350,6 +353,20 @@
 					this.addChild(video);
 				}
 			}
+		}
+		
+		private function resetVideo():void
+		{
+			if(video){
+				video.attachCamera(null);
+				video.clear();
+				this.removeChild(video);
+			}
+			
+			if(cam){
+				cam = null
+			}
+			
 		}
 	}
 }
